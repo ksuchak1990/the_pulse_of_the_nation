@@ -4,6 +4,7 @@ import csv
 import codecs
 import json
 import os
+import pandas as pd
 
 # Functions
 # Get url source code, else catch errors
@@ -36,6 +37,7 @@ def getDataURLs():
 
 # Given a list of links, get the csv files and merge them into a list of dicts
 def downloadData(urlList):
+    # Make list of all records as dicts
     data = list()
     for url in urlList:
         print('Downloading data from {0}'.format(url))
@@ -44,7 +46,21 @@ def downloadData(urlList):
         csvReader = csv.DictReader(content)
         for record in csvReader:
             data.append(record)
-    return data
+
+    # Get all questions
+    questionSet = set()
+    for record in data:
+        for k in record.keys():
+            questionSet.add(k)
+
+    # Make sure that every dict in data list has the same questions
+    outputData = list()
+    for record in data:
+        newRecord = {question: 'N/A' for question in questionSet if question not in record}
+        newRecord.update(record)
+        outputData.append(newRecord)
+
+    return outputData
 
 # Read in json data file
 def pickUp(path):
@@ -58,16 +74,27 @@ def putDown(item, path):
     with open(path, 'w') as outfile:
         json.dump(item, outfile)
 
+def putDownCSV(item, path):
+    print('Writing to {0}'.format(path))
+    with open(path, 'w') as outfile:
+        dataWriter = csv.DictWriter(outfile, fieldnames=item[0].keys())
+        dataWriter.writeheader()
+        dataWriter.writerows(item)
+
 # Wrapper for collection and writing of data
 def collectData():
-  urlList = getDataURLs()
-  print('Found {0} URLs'.format(len(urlList)))
-  data = downloadData(urlList)
-  print('Collected {0} records'.format(len(data)))
-  dataPath = './output/collectedData.json'
-  putDown(data, dataPath)
+    urlList = getDataURLs()
+    print('Found {0} URLs'.format(len(urlList)))
+    data = downloadData(urlList)
+    print('Collected {0} records'.format(len(data)))
+    dataPath = './output/collectedData.json'
+    putDown(data, dataPath)
+    putDownCSV(data, './output/collectedData.csv')
 
 # Main
 collectData()
 
-# Main 2 - 
+# data = pickUp(path='./output/collectedData.json')
+# df = pd.DataFrame.from_records(data)
+# print(df.shape)
+# print(df.head)
