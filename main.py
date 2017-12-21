@@ -45,7 +45,11 @@ def downloadData(urlList):
         content = codecs.iterdecode(item.iter_lines(), 'utf-8')
         csvReader = csv.DictReader(content)
         for record in csvReader:
-            data.append(record)
+            # Make sure that q&a's are clean
+            item = dict()
+            for k, v in record.items():
+                item[k.strip()] = v.strip()
+            data.append(item)
 
     # Get all questions
     questionSet = set()
@@ -74,6 +78,7 @@ def putDown(item, path):
     with open(path, 'w') as outfile:
         json.dump(item, outfile)
 
+# Write out csv data file
 def putDownCSV(item, path):
     print('Writing to {0}'.format(path))
     with open(path, 'w') as outfile:
@@ -81,7 +86,7 @@ def putDownCSV(item, path):
         dataWriter.writeheader()
         dataWriter.writerows(item)
 
-# Wrapper for collection and writing of data
+# Wrapper for initial collection and writing of data
 def collectData():
     urlList = getDataURLs()
     print('Found {0} URLs'.format(len(urlList)))
@@ -93,8 +98,3 @@ def collectData():
 
 # Main
 collectData()
-
-# data = pickUp(path='./output/collectedData.json')
-# df = pd.DataFrame.from_records(data)
-# print(df.shape)
-# print(df.head)
