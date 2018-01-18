@@ -5,6 +5,7 @@ import codecs
 import json
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Functions
 # Get url source code, else catch errors
@@ -97,4 +98,17 @@ def collectData():
     putDownCSV(data, './output/collectedData.csv')
 
 # Main
-collectData()
+# collectData()
+
+data = pickUp(path='./output/collectedData.json')
+df = pd.DataFrame.from_records(data)
+df['Age'] = df.Age.astype(int)
+
+df1 = df[['Age', 'Are you hungry right now?']]
+values = df1['Are you hungry right now?'].unique()
+for value in values:
+    tempdf = df1[df1['Are you hungry right now?'] == value]
+    print(value, len(tempdf))
+    tempdf['Age'].plot.box(title=value)
+    plt.show()
+ 
